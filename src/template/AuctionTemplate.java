@@ -36,7 +36,7 @@ public class AuctionTemplate implements AuctionBehavior {
 	private ArrayList<IncrementalAgent> opponents;
 	private ArrayList<IncrementalAgent> potentialOpponents;
 	//Time allowed to compute bid
-	private final static int MAX_TIME = 25000;
+	private long MAX_TIME;
 	private static Planner planner; //TODO use centralized agent for this class. Make it static object?
 	private double myTotalBid;
 	private double opponentTotalBid;
@@ -44,7 +44,6 @@ public class AuctionTemplate implements AuctionBehavior {
 	private double moderate; //TODO implement in auctionResult and change name!!!
 	private ArrayList<Double> opponentBidRatio;
 	private int round;
-	private long timeout;
 	private int iterations;
 
 	@Override
@@ -61,7 +60,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		}
 
 		// the plan method cannot execute more than timeout_plan milliseconds
-		timeout = ls.get(LogistSettings.TimeoutKey.BID)-1000;
+		MAX_TIME = ls.get(LogistSettings.TimeoutKey.BID)-1000;
 		iterations = 10000;
 		this.topology = topology;
 		this.distribution = distribution;
@@ -80,7 +79,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		myTotalBid = 0;
 		opponentTotalBid = 0;
 
-		planner = new Planner(timeout, iterations);
+		planner = new Planner(MAX_TIME, iterations);
 
 		moderate = 0.5; //TODO why these values at init?
 		// I think it is because we want to get more tasks at the beginning
@@ -167,7 +166,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		for (IncrementalAgent a: potentialOpponents) totalTasks += a.getTaskSize();
 		assert totalTasks != 0; //else divide by zero
 		int myTime = (int) Math.ceil(potentialAgent.getTaskSize() / totalTasks * MAX_TIME);
-		int opponentTime = MAX_TIME - myTime / 3;
+		int opponentTime = (int)MAX_TIME - myTime / 3;
 
 		//Change costs of new IncrementalAgents
 		potentialAgent.setCost(planner.getCost(potentialAgent));
