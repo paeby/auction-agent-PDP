@@ -4,9 +4,10 @@ package template;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import logist.behavior.AuctionBehavior;
+import logist.LogistSettings;
 import logist.agent.Agent;
+import logist.config.Parsers;
+import logist.behavior.AuctionBehavior;
 import logist.simulation.Vehicle;
 import logist.plan.Plan;
 import logist.task.Task;
@@ -43,11 +44,25 @@ public class AuctionTemplate implements AuctionBehavior {
 	private double moderate; //TODO implement in auctionResult and change name!!!
 	private ArrayList<Double> opponentBidRatio;
 	private int round;
+	private long timeout;
+	private int iterations;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution,
 			Agent agent) {
+		//get time-outs
 
+		// this code is used to get the timeouts
+		LogistSettings ls = null;
+		try {
+			ls = Parsers.parseSettings("config/settings_default.xml");
+		} catch (Exception exc) {
+			System.out.println("There was a problem loading the configuration file.");
+		}
+
+		// the plan method cannot execute more than timeout_plan milliseconds
+		timeout = ls.get(LogistSettings.TimeoutKey.BID)-1000;
+		iterations = 10000;
 		this.topology = topology;
 		this.distribution = distribution;
 		this.agent = agent;
@@ -64,8 +79,11 @@ public class AuctionTemplate implements AuctionBehavior {
 		opponentBidRatio = new ArrayList<>();
 		myTotalBid = 0;
 		opponentTotalBid = 0;
-		//TODO initialise Planner object here
+
+		planner = new Planner(timeout, iterations);
+
 		moderate = 0.5; //TODO why these values at init?
+		// I think it is because we want to get more tasks at the beginning
 		ratio = 1;
 
 		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
@@ -117,8 +135,6 @@ public class AuctionTemplate implements AuctionBehavior {
 		moderate += (weWon ? 0.1 : -0.05); //TODO test these values!!
 		if(moderate > 1) moderate = 1;
 		else if(moderate < 0.5) moderate = 0.5;
-
-
 	}
 	
 	@Override
