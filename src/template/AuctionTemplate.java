@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import logist.Measures;
 import logist.behavior.AuctionBehavior;
 import logist.agent.Agent;
 import logist.simulation.Vehicle;
@@ -30,6 +29,14 @@ public class AuctionTemplate implements AuctionBehavior {
 	private Random random;
 	private Vehicle vehicle;
 	private City currentCity;
+	//Growing Set of tasks with each new task auctioned
+	private IncrementalAgent myAgent;
+	private ArrayList<IncrementalAgent> opponents;
+	//Time allowed to compute bid
+	private final static int MAX_TIME = 25000;
+	private static Planner planner; //TODO use centralized agent for this class. Make it static object?
+	private double ratio;
+	private double canAllow; //TODO implement in auctionResult and change name!!!
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution,
@@ -40,6 +47,14 @@ public class AuctionTemplate implements AuctionBehavior {
 		this.agent = agent;
 		this.vehicle = agent.vehicles().get(0);
 		this.currentCity = vehicle.homeCity();
+		//setup here for incremental collections?
+		myAgent = new IncrementalAgent(agent.vehicles());
+		//3 different settings for opponents
+		for (int i = 0; i < 3; i++) {
+			opponents.add(new IncrementalAgent(agent.vehicles()));
+			opponents.get(i).randomizeVehicles();
+		}
+		//TODO initialise Planner object here
 
 		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
 		this.random = new Random(seed);
@@ -47,27 +62,58 @@ public class AuctionTemplate implements AuctionBehavior {
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
-		if (winner == agent.id()) {
-			currentCity = previous.deliveryCity;
-		}
+		long myBid = bids[agent.id()];
+		if(agent.id() == winner)
+			myAgent.addTask(previous);
 	}
 	
 	@Override
 	public Long askPrice(Task task) {
+		//If agent cannot carry task, bid highest so won't take task
+		if (myAgent.maxCapacity() < task.weight) return Long.MAX_VALUE;
 
-		if (vehicle.capacity() < task.weight)
-			return null;
+		//Get cost of opponents before modifying for marginal cost later
+		double oppPrevMeanCost = 0;
+		for (IncrementalAgent a: opponents) oppPrevMeanCost += a.getCost();
+		oppPrevMeanCost /= opponents.size();
 
-		long distanceTask = task.pickupCity.distanceUnitsTo(task.deliveryCity);
-		long distanceSum = distanceTask
-				+ currentCity.distanceUnitsTo(task.pickupCity);
-		double marginalCost = Measures.unitsToKM(distanceSum
-				* vehicle.costPerKm());
+		//Compute marginal cost
+		//Add task to taskset, recompute plan
+		IncrementalAgent potentialAgent = myAgent.copyOf();
+		//We only add to currentTasks if bid is won in auctionResult(...)
+		potentialAgent.addTask(task);
 
-		double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
-		double bid = ratio * marginalCost;
+		//Add task to potential opponent's tasksets
+		ArrayList<IncrementalAgent> potentialOpponents = new ArrayList<>();
+		for(IncrementalAgent a: opponents) {
+			potentialOpponents.add(a.copyOf());
+			//Add only if biggest vehicle can carry task
+			if (potentialOpponents.get(potentialOpponents.size()-1).maxCapacity() >= task.weight)
+				potentialOpponents.get(potentialOpponents.size()-1).addTask(task);
+		}
 
-		return (long) Math.round(bid);
+		//Partition time according
+		int totalTasks = potentialAgent.getTaskSize();
+		for (IncrementalAgent a: potentialOpponents) totalTasks += a.getTaskSize();
+		assert totalTasks != 0; //else divide by zero
+		int myTime = (int) Math.ceil(potentialAgent.getTaskSize() / totalTasks * MAX_TIME);
+		int opponentTime = MAX_TIME - myTime / 3;
+
+		//Change costs of new IncrementalAgents
+		potentialAgent.setCost(planner.getCost(potentialAgent));
+		double oppMeanCost = 0;
+		for (IncrementalAgent a: potentialOpponents) {
+			a.setCost(planner.getCost(a));
+			oppMeanCost += a.getCost();
+		}
+		oppMeanCost /= potentialOpponents.size();
+
+		//Compute marginal costs for me and for opponent
+		double marginalCost = myAgent.getCost() - potentialAgent.getCost();
+		double oppMargCost = oppMeanCost - oppPrevMeanCost;
+
+
+
 	}
 
 	@Override
