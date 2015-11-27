@@ -110,4 +110,12 @@ public class IncrementalAgent {
                 max = v.getCapacity();
         return max;
     }
+
+    public HashSet<Task> getTasks() {
+        return tasks;
+    }
+
+    public List<MyVehicle> getVehicles() {
+        return vehicles;
+    }
 }
