@@ -551,6 +551,10 @@ public class Planner {
 
         }
     }
+
+    public void setTimeout(long timeout) {
+        this.timeout_plan = timeout;
+    }
 }
 
 
