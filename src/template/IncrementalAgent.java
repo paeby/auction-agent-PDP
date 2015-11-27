@@ -63,6 +63,14 @@ public class IncrementalAgent {
         this.cost = cost;
     }
 
+    public List<MyVehicle> getVehicles() {
+        return vehicles;
+    }
+
+    public HashSet<Task> getTasks() {
+        return tasks;
+    }
+
     /**
      * Randomize how many vehicles in set
      * Randomize starting city of vehicles (neighbours
@@ -89,12 +97,10 @@ public class IncrementalAgent {
         }
 
         //randomize home city by getting a random neighbour between 0 and 3 times
-        for(MyVehicle v: newVehicles) {
+        for(MyVehicle v: newVehicles)
             for (int i = 0; i < 3; i++)
-                if (random.nextDouble() < 0.5) {
+                if (random.nextDouble() < 0.5)
                     v.setHome(v.getHome().randomNeighbor(random));
-                }
-        }
 
         vehicles = newVehicles;
     }

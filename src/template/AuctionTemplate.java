@@ -31,12 +31,18 @@ public class AuctionTemplate implements AuctionBehavior {
 	private City currentCity;
 	//Growing Set of tasks with each new task auctioned
 	private IncrementalAgent myAgent;
+	private IncrementalAgent potentialAgent;
 	private ArrayList<IncrementalAgent> opponents;
+	private ArrayList<IncrementalAgent> potentialOpponents;
 	//Time allowed to compute bid
 	private final static int MAX_TIME = 25000;
 	private static Planner planner; //TODO use centralized agent for this class. Make it static object?
+	private double myTotalBid;
+	private double opponentTotalBid;
 	private double ratio;
-	private double canAllow; //TODO implement in auctionResult and change name!!!
+	private double moderate; //TODO implement in auctionResult and change name!!!
+	private ArrayList<Double> opponentBidRatio;
+	private int round;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution,
@@ -50,11 +56,17 @@ public class AuctionTemplate implements AuctionBehavior {
 		//setup here for incremental collections?
 		myAgent = new IncrementalAgent(agent.vehicles());
 		//3 different settings for opponents
-		for (int i = 0; i < 3; i++) {
+		int opponentSize = 3;
+		for (int i = 0; i < opponentSize; i++) {
 			opponents.add(new IncrementalAgent(agent.vehicles()));
 			opponents.get(i).randomizeVehicles();
 		}
+		opponentBidRatio = new ArrayList<>();
+		myTotalBid = 0;
+		opponentTotalBid = 0;
 		//TODO initialise Planner object here
+		moderate = 0.5; //TODO why these values at init?
+		ratio = 1;
 
 		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
 		this.random = new Random(seed);
@@ -63,8 +75,50 @@ public class AuctionTemplate implements AuctionBehavior {
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		long myBid = bids[agent.id()];
-		if(agent.id() == winner)
-			myAgent.addTask(previous);
+		long opponentBid = bids[(agent.id() + 1) % 2];
+		boolean weWon = agent.id() == winner;
+
+		//If I am winner, add task to my set, else add to opponent's sets
+		if(weWon) {
+			//myAgent = the object computed for potentialAgent during bidding
+			myAgent = new IncrementalAgent(potentialAgent.getVehicles(), potentialAgent.getTasks(), potentialAgent.getCost());
+			myTotalBid += myBid;
+		}
+		else {
+			//opponents = the objects computed for potentialOpponents during bidding
+			for (int i = 0; i < opponents.size(); i++) {
+				opponents.get(i).addTask(previous);
+				IncrementalAgent potentialOpp = potentialOpponents.get(i);
+				opponents.set(i, new IncrementalAgent(potentialOpp.getVehicles(), potentialOpp.getTasks(), potentialOpp.getCost()));
+			}
+			opponentTotalBid += opponentBid;
+		}
+
+		double opponentMeanCost = 0;
+		for (IncrementalAgent a: opponents) {
+			opponentMeanCost += a.getCost();
+		}
+		opponentMeanCost /= opponents.size();
+		opponentBidRatio.add(opponentTotalBid / opponentMeanCost);
+
+		round++; //increment round counter
+
+		int weight = 0; //TODO what is happening here? unclear...
+		double newRatio = 0;
+		for (int i = 1; i <= round; i++) {
+			newRatio += i * opponentBidRatio.get(i-1);
+			weight += i;
+		}
+
+		ratio = (newRatio/weight + ratio) / 2;
+		if(ratio > 2.5) ratio = 2.5; //TODO test these values!!
+		else if(ratio < 0.7) ratio = 0.7;
+
+		moderate += (weWon ? 0.1 : -0.05); //TODO test these values!!
+		if(moderate > 1) moderate = 1;
+		else if(moderate < 0.5) moderate = 0.5;
+
+
 	}
 	
 	@Override
@@ -79,12 +133,12 @@ public class AuctionTemplate implements AuctionBehavior {
 
 		//Compute marginal cost
 		//Add task to taskset, recompute plan
-		IncrementalAgent potentialAgent = myAgent.copyOf();
+		potentialAgent = myAgent.copyOf();
 		//We only add to currentTasks if bid is won in auctionResult(...)
 		potentialAgent.addTask(task);
 
 		//Add task to potential opponent's tasksets
-		ArrayList<IncrementalAgent> potentialOpponents = new ArrayList<>();
+		potentialOpponents = new ArrayList<>();
 		for(IncrementalAgent a: opponents) {
 			potentialOpponents.add(a.copyOf());
 			//Add only if biggest vehicle can carry task
@@ -112,8 +166,11 @@ public class AuctionTemplate implements AuctionBehavior {
 		double marginalCost = myAgent.getCost() - potentialAgent.getCost();
 		double oppMargCost = oppMeanCost - oppPrevMeanCost;
 
-
-
+		//In order to bid lower than opponents estimated bid
+		double bid = 0.85 * oppMargCost;
+		if(bid < marginalCost * moderate) bid = marginalCost * moderate;
+		if(bid < 0) bid = 1;
+		return (long) Math.ceil(bid);
 	}
 
 	@Override
