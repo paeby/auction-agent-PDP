@@ -1,13 +1,9 @@
 package template;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import logist.simulation.Vehicle;
 import logist.plan.Plan;
 import logist.task.Task;
 import logist.topology.Topology.City;
@@ -34,7 +30,7 @@ public class Planner {
         double planCost;
         double lastCost;
         int counter =0;
-        List<PlanState> neighbours = new ArrayList<PlanState>();
+        List<PlanState> neighbours;
         //cost and load initialized
         for(MyVehicle v: agent.getVehicles()) {
             updateLoad(plan, v);
@@ -77,15 +73,16 @@ public class Planner {
     public List<Plan> getPlan(IncrementalAgent agent) {
         List<Plan> vplans = new ArrayList<>();
         for (MyVehicle v: agent.getVehicles()) {
-            vplans.add(v.id(), buildPlan(bestPlan, v, agent));
+            vplans.add(v.id(), buildPlan(bestPlan, v, agent.getTasks()));
         }
         return vplans;
     }
 
-    public Plan buildPlan(PlanState state, MyVehicle v, IncrementalAgent agent) {
+    //TODO build for list of vehicles, TaskSet and PlanState
+    public Plan buildPlan(PlanState state, MyVehicle v, HashSet<Task> tasks) {
         Integer next = state.getFirstPickup()[v.getVehicle().id()];
         if(next != null) {
-            Task t = getTask(agent.getTasks(), next);
+            Task t = getTask(tasks, next);
             City current = v.getHome();
             Plan p = new Plan(current);
             Integer[] times = new Integer[state.getTimeP().length + state.getTimeD().length];
@@ -99,18 +96,18 @@ public class Planner {
                 int deliverIndex = findIndex(v, state, state.getTimeD(), time);
 
                 if(pickupIndex != -1) {
-                    for (City c: current.pathTo(getTask(agent.getTasks(), pickupIndex).pickupCity)){
+                    for (City c: current.pathTo(getTask(tasks, pickupIndex).pickupCity)){
                         p.appendMove(c);
                     }
-                    current = getTask(agent.getTasks(), pickupIndex).pickupCity;
-                    p.appendPickup(getTask(agent.getTasks(), pickupIndex));
+                    current = getTask(tasks, pickupIndex).pickupCity;
+                    p.appendPickup(getTask(tasks, pickupIndex));
 
                 } else {
-                    for (City c: current.pathTo(getTask(agent.getTasks(), deliverIndex).deliveryCity)){
+                    for (City c: current.pathTo(getTask(tasks, deliverIndex).deliveryCity)){
                         p.appendMove(c);
                     }
-                    current = getTask(agent.getTasks(), deliverIndex).deliveryCity;
-                    p.appendDelivery(getTask(agent.getTasks(), deliverIndex));
+                    current = getTask(tasks, deliverIndex).deliveryCity;
+                    p.appendDelivery(getTask(tasks, deliverIndex));
                 }
             }
             return p;
@@ -395,7 +392,7 @@ public class Planner {
 
     /**
      * State implementation
-     */
+     *//*
     public class PlanState implements Comparable<PlanState> {
 
         private Integer[] firstPickup;
@@ -408,11 +405,11 @@ public class Planner {
         //private double cost;
         private double[] cost;
 
-        /**
+        *//**
          * Constructor for empty PlanState
          * @param vehicles
          * @param tasks
-         */
+         *//*
         public PlanState(List<MyVehicle> vehicles, HashSet<Task> tasks) {
             cost = new double[vehicles.size()];
             firstPickup = new Integer[vehicles.size()];
@@ -426,10 +423,10 @@ public class Planner {
             for(MyVehicle v: vehicles) vTasks.put(v.id(), new HashSet<Integer>());
         }
 
-        /**
+        *//**
          * Constructor that copies a plan
          * @param p plan to be copied to new plan
-         */
+         *//*
         public PlanState(PlanState p) {
             this.cost = p.cost.clone();
             firstPickup = p.getFirstPickup().clone();
@@ -468,10 +465,10 @@ public class Planner {
             return load;
         }
 
-        /**
+        *//**
          * @param v vehicle
          * @return set for given vehicle v
-         */
+         *//*
         public HashSet<Integer> getVTasks(MyVehicle v) {
             return vTasks.get(v.id());
         }
@@ -503,9 +500,9 @@ public class Planner {
 
     }
 
-    /**
+    *//**
      * Iterates over an int array from min to max given the tasks of a vehicle
-     */
+     *//*
     class ArrayIterator implements Iterator<Object> {
 
         private List<Integer> l;
@@ -554,7 +551,7 @@ public class Planner {
         public void remove() {
 
         }
-    }
+    }*/
 
     public void setTimeout(long timeout) {
         this.timeout_plan = timeout;
