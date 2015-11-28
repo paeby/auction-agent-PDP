@@ -13,7 +13,7 @@ import logist.task.Task;
 import logist.topology.Topology.City;
 
 /**
- * Created by Alexis Semple on 27/11/15.
+ * Created by Prisca Aeby on 27/11/15.
  */
 
 public class Planner {

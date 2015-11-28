@@ -30,30 +30,29 @@ public class AuctionTemplate implements AuctionBehavior {
 	private Vehicle vehicle;
 	private City currentCity;
 	//Growing Set of tasks with each new task auctioned
-	private IncrementalAgent myAgent;
-	private IncrementalAgent potentialAgent;
-	private ArrayList<IncrementalAgent> opponents;
-	private ArrayList<IncrementalAgent> potentialOpponents;
+	private IncrementalAgent myAgent; //object used to incrementally add tasks to set and compute its cost as auction proceeds
+	private IncrementalAgent potentialAgent; //used in bidding phase to compute 'potential' new stage in iteration (if bid is won)
+	private ArrayList<IncrementalAgent> opponents; //n opponents incrementally augmented
+	private ArrayList<IncrementalAgent> potentialOpponents; //n potential opponents for bidding phase
 	//Time allowed to compute bid
-	private final static int MAX_TIME = 25000;
-	private static Planner planner; //TODO use centralized agent for this class. Make it static object?
-	private double myTotalBid;
-	private double opponentTotalBid;
+	private static int MAX_TIME = 30000; //TODO take from xml settings file
+	private static Planner planner;
+	private double myTotalBid; //total of bids that were accepted - reward for tasks
+	private double opponentTotalBid; //total of bids of opponent that were accepted
 	private double ratio;
-	private double moderate; //TODO implement in auctionResult and change name!!!
+	private double moderate;
 	private ArrayList<Double> opponentBidRatio;
 	private int round;
 
 	@Override
-	public void setup(Topology topology, TaskDistribution distribution,
-			Agent agent) {
-
+	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
+		//MAX_TIME = Integer.parseInt(agent.readProperty("timeout-bid", String.class, "30000")); //read from config file but prob not from agent
 		this.topology = topology;
 		this.distribution = distribution;
 		this.agent = agent;
 		this.vehicle = agent.vehicles().get(0);
 		this.currentCity = vehicle.homeCity();
-		//setup here for incremental collections?
+		//setup here for incremental collections
 		myAgent = new IncrementalAgent(agent.vehicles());
 		//3 different settings for opponents
 		int opponentSize = 3;
@@ -146,7 +145,7 @@ public class AuctionTemplate implements AuctionBehavior {
 				potentialOpponents.get(potentialOpponents.size()-1).addTask(task);
 		}
 
-		//Partition time according
+		//Partition time according to number of tasks in sets of each
 		int totalTasks = potentialAgent.getTaskSize();
 		for (IncrementalAgent a: potentialOpponents) totalTasks += a.getTaskSize();
 		assert totalTasks != 0; //else divide by zero
@@ -163,8 +162,8 @@ public class AuctionTemplate implements AuctionBehavior {
 		oppMeanCost /= potentialOpponents.size();
 
 		//Compute marginal costs for me and for opponent
-		double marginalCost = myAgent.getCost() - potentialAgent.getCost();
-		double oppMargCost = oppMeanCost - oppPrevMeanCost;
+		double marginalCost = potentialAgent.getCost() - myAgent.getCost();
+		double oppMargCost = (oppMeanCost - oppPrevMeanCost) * ratio;
 
 		//In order to bid lower than opponents estimated bid
 		double bid = 0.85 * oppMargCost;
