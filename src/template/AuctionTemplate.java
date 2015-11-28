@@ -4,9 +4,10 @@ package template;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import logist.behavior.AuctionBehavior;
+import logist.LogistSettings;
 import logist.agent.Agent;
+import logist.config.Parsers;
+import logist.behavior.AuctionBehavior;
 import logist.simulation.Vehicle;
 import logist.plan.Plan;
 import logist.task.Task;
@@ -35,7 +36,7 @@ public class AuctionTemplate implements AuctionBehavior {
 	private ArrayList<IncrementalAgent> opponents; //n opponents incrementally augmented
 	private ArrayList<IncrementalAgent> potentialOpponents; //n potential opponents for bidding phase
 	//Time allowed to compute bid
-	private static int MAX_TIME = 30000; //TODO take from xml settings file
+	private static long MAX_TIME = 30000; //TODO take from xml settings file
 	private static Planner planner;
 	private double myTotalBid; //total of bids that were accepted - reward for tasks
 	private double opponentTotalBid; //total of bids of opponent that were accepted
@@ -43,10 +44,24 @@ public class AuctionTemplate implements AuctionBehavior {
 	private double moderate;
 	private ArrayList<Double> opponentBidRatio;
 	private int round;
+	private int iterations;
 
 	@Override
-	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
-		//MAX_TIME = Integer.parseInt(agent.readProperty("timeout-bid", String.class, "30000")); //read from config file but prob not from agent
+	public void setup(Topology topology, TaskDistribution distribution,
+			Agent agent) {
+		//get time-outs
+
+		// this code is used to get the timeouts
+		LogistSettings ls = null;
+		try {
+			ls = Parsers.parseSettings("config/settings_default.xml");
+		} catch (Exception exc) {
+			System.out.println("There was a problem loading the configuration file.");
+		}
+
+		// the plan method cannot execute more than timeout_plan milliseconds
+		MAX_TIME = ls.get(LogistSettings.TimeoutKey.BID)-1000;
+		iterations = 10000;
 		this.topology = topology;
 		this.distribution = distribution;
 		this.agent = agent;
@@ -63,8 +78,11 @@ public class AuctionTemplate implements AuctionBehavior {
 		opponentBidRatio = new ArrayList<>();
 		myTotalBid = 0;
 		opponentTotalBid = 0;
-		//TODO initialise Planner object here
+
+		planner = new Planner(MAX_TIME, iterations);
+
 		moderate = 0.5; //TODO why these values at init?
+		// I think it is because we want to get more tasks at the beginning
 		ratio = 1;
 
 		long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
@@ -116,8 +134,6 @@ public class AuctionTemplate implements AuctionBehavior {
 		moderate += (weWon ? 0.1 : -0.05); //TODO test these values!!
 		if(moderate > 1) moderate = 1;
 		else if(moderate < 0.5) moderate = 0.5;
-
-
 	}
 	
 	@Override
@@ -150,7 +166,7 @@ public class AuctionTemplate implements AuctionBehavior {
 		for (IncrementalAgent a: potentialOpponents) totalTasks += a.getTaskSize();
 		assert totalTasks != 0; //else divide by zero
 		int myTime = (int) Math.ceil(potentialAgent.getTaskSize() / totalTasks * MAX_TIME);
-		int opponentTime = MAX_TIME - myTime / 3;
+		int opponentTime = (int)MAX_TIME - myTime / 3;
 
 		//Change costs of new IncrementalAgents
 		potentialAgent.setCost(planner.getCost(potentialAgent));

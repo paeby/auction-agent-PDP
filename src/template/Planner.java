@@ -57,6 +57,10 @@ public class Planner {
                     Collections.sort(neighbours);
                     plan = neighbours.get(0);
                 }
+                if(counter == 2){
+                    neighbours = (moreNeighbours(agent.getVehicles(), plan));
+                    plan = localChoice(neighbours, plan, i);
+                }
             }
             else{
                 counter = 0;
@@ -550,6 +554,10 @@ public class Planner {
         public void remove() {
 
         }
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout_plan = timeout;
     }
 }
 
