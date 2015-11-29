@@ -203,7 +203,7 @@ public class MyAuction  implements AuctionBehavior {
             myTasks.add(t);
         }
 
-        PlanState myPlanState = new PlanState(myVehicles, myTasks);
+        PlanState myPlanState = new PlanState(myVehicles, tasks.size());
 
         //Plan planVehicle1 = naivePlan(vehicle, tasks);
 

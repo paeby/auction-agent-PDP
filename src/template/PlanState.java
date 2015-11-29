@@ -21,26 +21,26 @@ public class PlanState implements Comparable<PlanState> {
     private Integer[] timeD; // [d0, d1, ..., dn]
     private int[][] load;
     private List<MyVehicle> vehicles;
-    public HashSet<Task> tasks;
     private Map<Integer, HashSet<Integer>> vTasks = new HashMap<Integer, HashSet<Integer>>(); // Map from vehicle_id to Set of tasks in vehicle's track
     //private double cost;
     public double[] cost;
+    public final int taskSize;
 
     /**
      * Constructor for empty PlanState
      * @param vehicles
-     * @param tasks
+     * @param taskSize
      */
-    public PlanState(List<MyVehicle> vehicles, HashSet<Task> tasks) {
+    public PlanState(List<MyVehicle> vehicles, int taskSize) {
         cost = new double[vehicles.size()];
         firstPickup = new Integer[vehicles.size()];
-        timeP = new Integer[tasks.size()];
-        for(int i = 0; i < tasks.size(); i++)timeP[i] = 0;
-        timeD = new Integer[tasks.size()];
-        for(int i = 0; i < tasks.size(); i++)timeD[i] = 0;
-        load = new int[vehicles.size()][2 * tasks.size()];
+        timeP = new Integer[taskSize];
+        for(int i = 0; i < taskSize; i++)timeP[i] = 0;
+        timeD = new Integer[taskSize];
+        for(int i = 0; i < taskSize; i++)timeD[i] = 0;
+        load = new int[vehicles.size()][2 * taskSize];
         this.vehicles = vehicles;
-        this.tasks = tasks;
+        this.taskSize = taskSize;
         for(MyVehicle v: vehicles) vTasks.put(v.id(), new HashSet<Integer>());
     }
 
@@ -50,16 +50,16 @@ public class PlanState implements Comparable<PlanState> {
      */
     public PlanState(PlanState p) {
         this.cost = p.cost.clone();
+        this.taskSize = p.taskSize;
         firstPickup = p.getFirstPickup().clone();
         timeP = p.getTimeP().clone();
         timeD = p.getTimeD().clone();
-        this.load = new int[p.vehicles.size()][2 * p.tasks.size()];
+        this.load = new int[p.vehicles.size()][2 * p.taskSize];
         for (int i = 0; i < p.vehicles.size(); i++) {
-            for (int j = 0; j < p.tasks.size() * 2; j++) {
+            for (int j = 0; j < p.taskSize * 2; j++) {
                 this.load[i][j] = p.getLoad()[i][j];
             }
         }
-        this.tasks = p.tasks;
         this.vehicles = p.vehicles;
         //Copy of HashSet values in Map
         for (MyVehicle v : vehicles) vTasks.put(v.id(), new HashSet<Integer>());
