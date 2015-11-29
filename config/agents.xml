@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<agents>
+<agent>
 	<!-- A list of agents and their behavior classes -->
 	
 	<!-- #### AUCTION AGENTS ### -->
 	<agent name="auction-random">
-		<set class-path="bin/"/>
+		<set class-path="/bin"/>
 		<set class-name="template.AuctionTemplate"/>
 	</agent>
-	
-</agents>
+
+
+	<agent name="my-auction">
+		<set class-path="/bin"/>
+		<set class-name="template.MyAuction"/>
+	</agent>
+
+</agent>
