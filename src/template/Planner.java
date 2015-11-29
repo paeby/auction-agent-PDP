@@ -49,10 +49,6 @@ public class Planner {
         }
         for (int i = 0; i < iterations; i++) {
             neighbours = ChooseNeighbours(plan, agent.getVehicles());
-            if(System.currentTimeMillis()-time_start > this.timeout_plan) {
-                System.out.println("time out centralized plan");
-                break;
-            }
             lastCost = plan.cost();
             plan = localChoice(neighbours, plan, i);
             planCost = plan.cost();
@@ -74,6 +70,10 @@ public class Planner {
             if(planCost < min) {
                 bestPlan = new PlanState(plan);
                 min = planCost;
+            }
+            if(System.currentTimeMillis()-time_start > this.timeout_plan) {
+                System.out.println("time out centralized plan");
+                break;
             }
         }
 
