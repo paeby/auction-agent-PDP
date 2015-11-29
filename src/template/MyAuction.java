@@ -90,6 +90,7 @@ public class MyAuction  implements AuctionBehavior {
     public void auctionResult(Task previous, int winner, Long[] bids) {
         long myBid = bids[agent.id()];
         long opponentBid = bids[(agent.id() + 1) % 2];
+
         boolean weWon = agent.id() == winner;
 
         //If I am winner, add task to my set, else add to opponent's sets

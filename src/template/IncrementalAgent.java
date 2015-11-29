@@ -11,7 +11,7 @@ import logist.task.Task;
  * Created by Alexis Semple on 27/11/15.
  */
 public class IncrementalAgent {
-    private HashSet<Task> tasks;
+    private HashSet<Task> tasks = new HashSet<>();;
     private List<MyVehicle> vehicles = new ArrayList<>();
     private double cost;
 
@@ -20,7 +20,6 @@ public class IncrementalAgent {
      * @param vs vehicle set
      */
     public IncrementalAgent(List<Vehicle> vs) {
-        tasks = new HashSet<>();
         cost = 0;
         for (Vehicle v: vs) vehicles.add(new MyVehicle(v));
     }
@@ -91,6 +90,7 @@ public class IncrementalAgent {
             MyVehicle newV = new MyVehicle(prevV);
             //Set vehicle capacity between factor 0.7 and 1.3 of initial capacity
             newV.setCapacity((int) Math.ceil(prevV.getCapacity() * (0.75 + 0.5 * random.nextDouble())));
+            newV.setId(i);
             newVehicles.add(newV);
         }
 

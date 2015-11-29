@@ -29,13 +29,13 @@ public class Planner {
         double min = Integer.MAX_VALUE;
         double planCost;
         double lastCost;
-        int counter =0;
+        int counter = 0;
+        bestPlan = new PlanState(plan);
         List<PlanState> neighbours;
         //cost and load initialized
         for(MyVehicle v: agent.getVehicles()) {
             updateLoad(plan, v);
         }
-
         for (int i = 0; i < iterations; i++) {
             neighbours = ChooseNeighbours(plan, agent.getTasks(), agent.getVehicles());
             if(System.currentTimeMillis()-time_start > this.timeout_plan) {
@@ -45,7 +45,6 @@ public class Planner {
             lastCost = plan.cost();
             plan = localChoice(neighbours, plan, i);
             planCost = plan.cost();
-
             if(lastCost == planCost){
                 counter ++;
                 if(counter == 1){
@@ -64,9 +63,9 @@ public class Planner {
             if(planCost < min) {
                 bestPlan = new PlanState(plan);
                 min = planCost;
-
             }
         }
+
         return bestPlan.cost();
     }
 
@@ -159,6 +158,7 @@ public class Planner {
                     vChosen = v;
                 }
             }
+
             plan.addVTasks(vChosen.id(), t.id);
             plan.getTimeP()[t.id] = times[vChosen.id()];
             plan.getTimeD()[t.id] = times[vChosen.id()] + 1;
@@ -387,170 +387,6 @@ public class Planner {
         }
         return neighbours;
     }
-
-
-    /**
-     * State implementation
-     *//*
-    public class PlanState implements Comparable<PlanState> {
-
-        private Integer[] firstPickup;
-        private Integer[] timeP; // [p0, p1, ..., pn]
-        private Integer[] timeD; // [d0, d1, ..., dn]
-        private int[][] load;
-        private List<MyVehicle> vehicles;
-        private HashSet<Task> tasks;
-        private Map<Integer, HashSet<Integer>> vTasks = new HashMap<Integer, HashSet<Integer>>(); // Map from vehicle_id to Set of tasks in vehicle's track
-        //private double cost;
-        private double[] cost;
-
-        *//**
-         * Constructor for empty PlanState
-         * @param vehicles
-         * @param tasks
-         *//*
-        public PlanState(List<MyVehicle> vehicles, HashSet<Task> tasks) {
-            cost = new double[vehicles.size()];
-            firstPickup = new Integer[vehicles.size()];
-            timeP = new Integer[tasks.size()];
-            for(int i = 0; i < tasks.size(); i++)timeP[i] = 0;
-            timeD = new Integer[tasks.size()];
-            for(int i = 0; i < tasks.size(); i++)timeD[i] = 0;
-            load = new int[vehicles.size()][2 * tasks.size()];
-            this.vehicles = vehicles;
-            this.tasks = tasks;
-            for(MyVehicle v: vehicles) vTasks.put(v.id(), new HashSet<Integer>());
-        }
-
-        *//**
-         * Constructor that copies a plan
-         * @param p plan to be copied to new plan
-         *//*
-        public PlanState(PlanState p) {
-            this.cost = p.cost.clone();
-            firstPickup = p.getFirstPickup().clone();
-            timeP = p.getTimeP().clone();
-            timeD = p.getTimeD().clone();
-            this.load = new int[p.vehicles.size()][2 * p.tasks.size()];
-            for (int i = 0; i < p.vehicles.size(); i++) {
-                for (int j = 0; j < p.tasks.size() * 2; j++) {
-                    this.load[i][j] = p.getLoad()[i][j];
-                }
-            }
-            this.tasks = p.tasks;
-            this.vehicles = p.vehicles;
-            //Copy of HashSet values in Map
-            for (MyVehicle v : vehicles) vTasks.put(v.id(), new HashSet<Integer>());
-            for(Map.Entry<Integer, HashSet<Integer>> e: p.getVTasks().entrySet()) {
-                for(Integer i: e.getValue()) {
-                    vTasks.get(e.getKey()).add(new Integer(i));
-                }
-            }
-        }
-
-        public Integer[] getFirstPickup() {
-            return firstPickup;
-        }
-
-        public Integer[] getTimeP() {
-            return timeP;
-        }
-
-        public Integer[] getTimeD() {
-            return timeD;
-        }
-
-        public int[][] getLoad() {
-            return load;
-        }
-
-        *//**
-         * @param v vehicle
-         * @return set for given vehicle v
-         *//*
-        public HashSet<Integer> getVTasks(MyVehicle v) {
-            return vTasks.get(v.id());
-        }
-
-        public Map<Integer, HashSet<Integer>> getVTasks() {
-            return vTasks;
-        }
-
-        public void addVTasks(Integer v, Integer t) {
-            vTasks.get(v).add(t);
-        }
-
-        public void removeVTasks(Integer v, Integer t) {
-            vTasks.get(v).remove(t);
-        }
-
-        public double cost() {
-            double costTot = 0;
-            for(int i = 0; i < vehicles.size(); i++) {
-                costTot += cost[i];
-            }
-            return costTot;
-        }
-
-        @Override
-        public int compareTo(PlanState o) {
-            return Double.compare(this.cost(),o.cost());
-        }
-
-    }
-
-    *//**
-     * Iterates over an int array from min to max given the tasks of a vehicle
-     *//*
-    class ArrayIterator implements Iterator<Object> {
-
-        private List<Integer> l;
-        private HashSet<Integer> tasks = new HashSet<Integer>();
-
-        ArrayIterator(Integer[] time, HashSet<Integer> t) {
-            l = new ArrayList<Integer>(Collections.nCopies(time.length, -1));
-            for (Integer i: t) {
-                tasks.add(new Integer(i));
-            }
-            for(Integer ti: tasks) {
-                l.set(ti, time[ti]);
-                l.set(ti + time.length/2, time[ti + time.length/2]);
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            for (Integer i: tasks) {
-                if(l.get(i) != -1 || l.get(i+l.size()/2) != -1) return true;
-            }
-            return false;
-        }
-
-        @Override
-        public Integer next() {
-            int min = Integer.MAX_VALUE;
-            Integer index = -1;
-
-            for(Integer t: tasks) {
-                if(l.get(t) != -1 && l.get(t) < min) {
-                    min = l.get(t);
-                    index = t;
-                }
-                if(l.get(t+l.size()/2) != -1 && l.get(t+l.size()/2) < min) {
-                    min = l.get(t+l.size()/2);
-                    index = t+l.size()/2;
-                }
-            }
-
-            l.set(index, -1); //remove
-            return min;
-        }
-
-        @Override
-        public void remove() {
-
-        }
-    }*/
 
     public void setTimeout(long timeout) {
         this.timeout_plan = timeout;
