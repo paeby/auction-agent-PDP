@@ -76,19 +76,19 @@ public class Planner {
                 break;
             }
         }
-
+        System.out.println(bestPlan.cost());
         return bestPlan.cost();
     }
 
     public List<Plan> getPlan(IncrementalAgent agent) {
         List<Plan> vplans = new ArrayList<>();
         for (MyVehicle v: agent.getVehicles()) {
-            vplans.add(v.id(), buildPlan(bestPlan, v, agent.getTasks()));
+            vplans.add(v.getVehicle().id(), buildPlan(bestPlan, v));
         }
         return vplans;
     }
 
-    public Plan buildPlan(PlanState state, MyVehicle v, HashSet<Task> tasks) {
+    public Plan buildPlan(PlanState state, MyVehicle v) {
         Integer next = state.getFirstPickup()[v.getVehicle().id()];
         if(next != null) {
             Task t = tasksMap.get(next);

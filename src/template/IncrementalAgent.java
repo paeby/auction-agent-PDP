@@ -115,9 +115,4 @@ public class IncrementalAgent {
         return max;
     }
 
-    public List<MyVehicle> cloneList(List<MyVehicle> list) throws CloneNotSupportedException {
-        List<MyVehicle> clone = new ArrayList<MyVehicle>(list.size());
-        for(MyVehicle item: list) clone.add(item.clone());
-        return clone;
-    }
 }

@@ -190,33 +190,33 @@ public class MyAuction  implements AuctionBehavior {
 
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-
+        return planner.getPlan(myAgent);
 //		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-
-        List<MyVehicle> myVehicles = new ArrayList<>();
-        for(Vehicle v: vehicles) {
-            myVehicles.add(new MyVehicle(v));
-        }
-
-        HashSet<Task> myTasks = new HashSet<>();
-        for(Task t: tasks) {
-            myTasks.add(t);
-        }
-
-        PlanState myPlanState = new PlanState(myVehicles, tasks.size());
-
-        //Plan planVehicle1 = naivePlan(vehicle, tasks);
-
-        List<Plan> plans = new ArrayList<Plan>();
-
-        for(MyVehicle v: myVehicles) {
-            plans.add(planner.buildPlan(myPlanState, v, myTasks));
-        }
-
-		/*plans.add(planVehicle1);
-		while (plans.size() < vehicles.size())
-			plans.add(Plan.EMPTY);*/
-
-        return plans;
+//
+//        List<MyVehicle> myVehicles = new ArrayList<>();
+//        for(Vehicle v: vehicles) {
+//            myVehicles.add(new MyVehicle(v));
+//        }
+//
+//        HashSet<Task> myTasks = new HashSet<>();
+//        for(Task t: tasks) {
+//            myTasks.add(t);
+//        }
+//
+//        PlanState myPlanState = new PlanState(myVehicles, myTasks.size());
+//
+//        //Plan planVehicle1 = naivePlan(vehicle, tasks);
+//
+//        List<Plan> plans = new ArrayList<Plan>();
+//
+//        for(MyVehicle v: myVehicles) {
+//            plans.add(planner.buildPlan(myPlanState, v, myTasks));
+//        }
+//
+//		/*plans.add(planVehicle1);
+//		while (plans.size() < vehicles.size())
+//			plans.add(Plan.EMPTY);*/
+//
+//        return plans;
     }
 }
