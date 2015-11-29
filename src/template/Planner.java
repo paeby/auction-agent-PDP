@@ -1,10 +1,8 @@
 package template;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
 import logist.plan.Plan;
+import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.topology.Topology.City;
 
@@ -16,15 +14,28 @@ public class Planner {
     private long timeout_plan;
     private int iterations;
     private PlanState bestPlan;
-
+    private Map<Integer, Task> tasksMap = new HashMap<>();
+    private Map<Task, Integer> tasksID = new HashMap<>();
     public Planner(long timeout, int iterations) {
         this.timeout_plan = timeout;
         this.iterations = iterations;
     }
 
     public double getCost(IncrementalAgent agent) {
-        PlanState plan = new PlanState(agent.getVehicles(), agent.getTasks());
-        initSolution(agent.getVehicles(), agent.getTasks(), plan);
+        // mapping the tasks' id's from 0 to tasks.size to be able to use time arrays
+        List<Task> tasksList = new ArrayList<>(agent.getTasks());
+        tasksMap = new HashMap<>();
+        tasksID = new HashMap<>();
+        for(int i = 0; i < tasksList.size(); i++) {
+            tasksMap.put(i, tasksList.get(i));
+            tasksID.put(tasksList.get(i), i);
+        }
+        // mapping the vehicles' id's from 0 to vehicles.size to be able to use time arrays
+        List<MyVehicle> vehicleList = new ArrayList<>(agent.getVehicles());
+        for(int i = 0; i < vehicleList.size(); i++) vehicleList.get(i).setId(i);
+
+        PlanState plan = new PlanState(agent.getVehicles(), tasksList.size());
+        initSolution(agent.getVehicles(), plan);
         long time_start = System.currentTimeMillis();
         double min = Integer.MAX_VALUE;
         double planCost;
@@ -37,11 +48,7 @@ public class Planner {
             updateLoad(plan, v);
         }
         for (int i = 0; i < iterations; i++) {
-            neighbours = ChooseNeighbours(plan, agent.getTasks(), agent.getVehicles());
-            if(System.currentTimeMillis()-time_start > this.timeout_plan) {
-                System.out.println("time out centralized plan");
-                break;
-            }
+            neighbours = ChooseNeighbours(plan, agent.getVehicles());
             lastCost = plan.cost();
             plan = localChoice(neighbours, plan, i);
             planCost = plan.cost();
@@ -64,6 +71,10 @@ public class Planner {
                 bestPlan = new PlanState(plan);
                 min = planCost;
             }
+            if(System.currentTimeMillis()-time_start > this.timeout_plan) {
+                System.out.println("time out centralized plan");
+                break;
+            }
         }
 
         return bestPlan.cost();
@@ -80,7 +91,7 @@ public class Planner {
     public Plan buildPlan(PlanState state, MyVehicle v, HashSet<Task> tasks) {
         Integer next = state.getFirstPickup()[v.getVehicle().id()];
         if(next != null) {
-            Task t = getTask(tasks, next);
+            Task t = tasksMap.get(next);
             City current = v.getHome();
             Plan p = new Plan(current);
             Integer[] times = new Integer[state.getTimeP().length + state.getTimeD().length];
@@ -94,18 +105,18 @@ public class Planner {
                 int deliverIndex = findIndex(v, state, state.getTimeD(), time);
 
                 if(pickupIndex != -1) {
-                    for (City c: current.pathTo(getTask(tasks, pickupIndex).pickupCity)){
+                    for (City c: current.pathTo(tasksMap.get(pickupIndex).pickupCity)){
                         p.appendMove(c);
                     }
-                    current = getTask(tasks, pickupIndex).pickupCity;
-                    p.appendPickup(getTask(tasks, pickupIndex));
+                    current = tasksMap.get(pickupIndex).pickupCity;
+                    p.appendPickup(tasksMap.get(pickupIndex));
 
                 } else {
-                    for (City c: current.pathTo(getTask(tasks, deliverIndex).deliveryCity)){
+                    for (City c: current.pathTo(tasksMap.get(deliverIndex).deliveryCity)){
                         p.appendMove(c);
                     }
-                    current = getTask(tasks, deliverIndex).deliveryCity;
-                    p.appendDelivery(getTask(tasks, deliverIndex));
+                    current = tasksMap.get(deliverIndex).deliveryCity;
+                    p.appendDelivery(tasksMap.get(deliverIndex));
                 }
             }
             return p;
@@ -115,23 +126,6 @@ public class Planner {
         }
     }
 
-
-    /**
-     * Gets the Task from set with task_id id
-     * @param tasks set
-     * @param id id
-     * @return task with id
-     */
-    private Task getTask(HashSet<Task> tasks, int id) {
-        for (Task t : tasks) {
-            if (t.id == id) {
-                return t;
-            }
-        }
-        return null;
-    }
-
-
     private Integer findIndex(MyVehicle v, PlanState plan, Integer[] times, Integer t) {
         for(int i = 0; i < times.length; i++) {
             if(times[i] == t && plan.getVTasks(v).contains(i)) return i;
@@ -140,7 +134,7 @@ public class Planner {
     }
 
     // give tasks to nearest vehicle
-    private void initSolution(List<MyVehicle> vehicles, HashSet<Task> tasks, PlanState plan) {
+    private void initSolution(List<MyVehicle> vehicles, PlanState plan) {
         City[] cities = new City[vehicles.size()];
         Integer[] times = new Integer[vehicles.size()];
         for(MyVehicle v: vehicles) {
@@ -148,7 +142,7 @@ public class Planner {
             times[v.id()] = 0;
         }
 
-        for(Task t : tasks) {
+        for(Task t : tasksMap.values()) {
             double min = Double.MAX_VALUE;
             MyVehicle vChosen = null;
             for(MyVehicle v: vehicles) {
@@ -159,12 +153,14 @@ public class Planner {
                 }
             }
 
-            plan.addVTasks(vChosen.id(), t.id);
-            plan.getTimeP()[t.id] = times[vChosen.id()];
-            plan.getTimeD()[t.id] = times[vChosen.id()] + 1;
+            plan.addVTasks(vChosen.id(), tasksID.get(t));
+            System.out.println("P length "+ plan.getTimeP().length);
+            System.out.println("t id "+ tasksID.size());
+            plan.getTimeP()[tasksID.get(t)] = times[vChosen.id()];
+            plan.getTimeD()[tasksID.get(t)] = times[vChosen.id()] + 1;
             times[vChosen.id()] = times[vChosen.id()] + 2;
             if(plan.getFirstPickup()[vChosen.id()] == null) {
-                plan.getFirstPickup()[vChosen.id()] = t.id;
+                plan.getFirstPickup()[vChosen.id()] = tasksID.get(t);
             }
             cities[vChosen.id()] = t.deliveryCity;
         }
@@ -195,11 +191,10 @@ public class Planner {
     /**
      * Computes all PlanState neighbours from given PlanState by exchanging tasks between vehicles, and permuting within a vehicle
      * @param plan current plan
-     * @param tasks set of all tasks
      * @param vehicles set of all vehicles
      * @return a list of PlanStates that are neighbours of the current plan
      */
-    private List<PlanState> ChooseNeighbours(PlanState plan, HashSet<Task> tasks, List<MyVehicle> vehicles){
+    private List<PlanState> ChooseNeighbours(PlanState plan, List<MyVehicle> vehicles){
         List<PlanState> neighbours = new ArrayList<PlanState>();
         MyVehicle v;
 
@@ -222,7 +217,7 @@ public class Planner {
         }
 
         for(MyVehicle v2: vehicles) {
-            if(getTask(tasks, task).weight <= v2.getCapacity()){
+            if(tasksMap.get(task).weight <= v2.getCapacity()){
                 neighbours.addAll(changeVehicle(v, v2, task, plan));
             }
         }
@@ -283,7 +278,7 @@ public class Planner {
             System.arraycopy(plan.getTimeD(), 0, times, plan.getTimeP().length, plan.getTimeD().length);
             ArrayIterator it = new ArrayIterator(times, plan.getVTasks(vehicle));
 
-            for(int i = 0; i < 2*plan.tasks.size(); i++) {
+            for(int i = 0; i < 2*plan.taskSize; i++) {
                 plan.getLoad()[vID][i] = 0;
             }
 
@@ -295,17 +290,17 @@ public class Planner {
                 int deliverIndex = findIndex(vehicle, plan, plan.getTimeD(), time);
 
                 if(pickupIndex != -1) {
-                    load += getTask(plan.tasks, pickupIndex).weight;
+                    load += tasksMap.get(pickupIndex).weight;
                     plan.getLoad()[vID][time] = load;
-                    cost += current.distanceTo(getTask(plan.tasks, pickupIndex).pickupCity)*vehicle.getVehicle().costPerKm();
-                    current = getTask(plan.tasks, pickupIndex).pickupCity;
+                    cost += current.distanceTo(tasksMap.get(pickupIndex).pickupCity)*vehicle.getVehicle().costPerKm();
+                    current = tasksMap.get(pickupIndex).pickupCity;
                     if(load > vehicle.getCapacity()) return false;
 
                 } else {
-                    load -= getTask(plan.tasks, deliverIndex).weight;
+                    load -= tasksMap.get(deliverIndex).weight;
                     plan.getLoad()[vID][time] = load;
-                    cost += current.distanceTo(getTask(plan.tasks, deliverIndex).deliveryCity)*vehicle.getVehicle().costPerKm();
-                    current = getTask(plan.tasks, deliverIndex).deliveryCity;
+                    cost += current.distanceTo(tasksMap.get(deliverIndex).deliveryCity)*vehicle.getVehicle().costPerKm();
+                    current = tasksMap.get(deliverIndex).deliveryCity;
                 }
             }
         }
