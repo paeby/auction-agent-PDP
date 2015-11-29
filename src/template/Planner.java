@@ -78,7 +78,6 @@ public class Planner {
         return vplans;
     }
 
-    //TODO build for list of vehicles, TaskSet and PlanState
     public Plan buildPlan(PlanState state, MyVehicle v, HashSet<Task> tasks) {
         Integer next = state.getFirstPickup()[v.getVehicle().id()];
         if(next != null) {
