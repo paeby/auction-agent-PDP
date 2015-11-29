@@ -29,8 +29,8 @@ public class MyAuction  implements AuctionBehavior {
     //Growing Set of tasks with each new task auctioned
     private IncrementalAgent myAgent; //object used to incrementally add tasks to set and compute its cost as auction proceeds
     private IncrementalAgent potentialAgent; //used in bidding phase to compute 'potential' new stage in iteration (if bid is won)
-    private ArrayList<IncrementalAgent> opponents; //n opponents incrementally augmented
-    private ArrayList<IncrementalAgent> potentialOpponents; //n potential opponents for bidding phase
+    private ArrayList<IncrementalAgent> opponents = new ArrayList<>(); //n opponents incrementally augmented
+    private ArrayList<IncrementalAgent> potentialOpponents = new ArrayList<>(); //n potential opponents for bidding phase
     //Time allowed to compute bid
     private static long MAX_TIME;
     private static Planner planner;
@@ -50,7 +50,7 @@ public class MyAuction  implements AuctionBehavior {
         // this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = Parsers.parseSettings("config/settings_default.xml");
+            ls = Parsers.parseSettings("config/settings_auction.xml");
         } catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");
         }

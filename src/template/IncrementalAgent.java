@@ -1,5 +1,6 @@
 package template;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -11,7 +12,7 @@ import logist.task.Task;
  */
 public class IncrementalAgent {
     private HashSet<Task> tasks;
-    private List<MyVehicle> vehicles;
+    private List<MyVehicle> vehicles = new ArrayList<>();
     private double cost;
 
     /**
