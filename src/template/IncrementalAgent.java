@@ -90,6 +90,7 @@ public class IncrementalAgent {
             MyVehicle newV = new MyVehicle(prevV);
             //Set vehicle capacity between factor 0.75 and 1.25 of initial capacity
             newV.setCapacity((int) Math.ceil(prevV.getCapacity() * (0.75 + 0.5 * random.nextDouble())));
+            newV.setId(i);
             newVehicles.add(newV);
         }
 

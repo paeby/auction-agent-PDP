@@ -10,6 +10,7 @@ public class MyVehicle {
     private Vehicle vehicle;
     private City home;
     private int capacity;
+    private int id;
 
     public MyVehicle(Vehicle v) {
         vehicle = v;
@@ -44,11 +45,15 @@ public class MyVehicle {
     }
 
     public int id() {
-        return vehicle.id();
+        return this.id;
     }
 
     @Override
     protected MyVehicle clone() throws CloneNotSupportedException {
         return new MyVehicle(this);
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }
