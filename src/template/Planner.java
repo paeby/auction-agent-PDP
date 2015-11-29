@@ -70,6 +70,7 @@ public class Planner {
             if(planCost < min) {
                 bestPlan = new PlanState(plan);
                 min = planCost;
+                System.out.println(min);
             }
             if(System.currentTimeMillis()-time_start > this.timeout_plan) {
                 System.out.println("time out centralized plan");

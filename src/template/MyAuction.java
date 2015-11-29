@@ -33,6 +33,7 @@ public class MyAuction  implements AuctionBehavior {
     private ArrayList<IncrementalAgent> potentialOpponents = new ArrayList<>(); //n potential opponents for bidding phase
     //Time allowed to compute bid
     private static long MAX_TIME;
+    private long timeout_plan;
     private static Planner planner;
     private double myTotalBid; //total of bids that were accepted - reward for tasks
     private double opponentTotalBid; //total of bids of opponent that were accepted
@@ -57,6 +58,7 @@ public class MyAuction  implements AuctionBehavior {
 
         // the plan method cannot execute more than timeout_plan milliseconds
         MAX_TIME = ls.get(LogistSettings.TimeoutKey.BID)-1000;
+        timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN)-1000;
         iterations = 10000;
         this.topology = topology;
         this.distribution = distribution;
@@ -190,7 +192,19 @@ public class MyAuction  implements AuctionBehavior {
 
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
+        List<MyVehicle> vs = new ArrayList<>();
+        for (Vehicle v: vehicles) {
+            vs.add(new MyVehicle(v));
+        }
+        HashSet<Task> ts = new HashSet<>();
+        for(Task t: tasks) {
+            ts.add(t);
+        }
+        IncrementalAgent finalAgent = new IncrementalAgent(vs, ts, 0);
+        planner.setTimeout(20000);
+        planner.getCost(finalAgent);
         return planner.getPlan(myAgent);
+
 //		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
 //
 //        List<MyVehicle> myVehicles = new ArrayList<>();
