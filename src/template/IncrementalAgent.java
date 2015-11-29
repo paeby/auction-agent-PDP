@@ -79,21 +79,18 @@ public class IncrementalAgent {
      */
     public void randomizeVehicles() {
         Random random = new Random(System.currentTimeMillis());
-        List<MyVehicle> newVehicles = vehicles;
+        List<MyVehicle> newVehicles = new ArrayList<>();
 
         //random int between 2 and 5 (0 + 2 to 3 + 2)
         int numVehicles = random.nextInt(4) + 2;
-        //change size of vehicles to be that of numVehicles
-        if(newVehicles.size() > numVehicles)
-            while(newVehicles.size() > numVehicles) newVehicles.remove(0);
-        else if(newVehicles.size() < numVehicles)
-            while(newVehicles.size() < numVehicles) newVehicles.add(new MyVehicle(newVehicles.get(0)));
 
+        //change size of vehicles to be that of numVehicles
         //randomize capacity
-        for (MyVehicle v: newVehicles) {
-            MyVehicle newV = new MyVehicle(v);
+        for(int i = 0; i < numVehicles; i++) {
+            MyVehicle prevV = vehicles.get(i % vehicles.size());
+            MyVehicle newV = new MyVehicle(prevV);
             //Set vehicle capacity between factor 0.7 and 1.3 of initial capacity
-            newV.setCapacity((int)Math.ceil(v.getCapacity()*(0.75 + 0.5*random.nextDouble())));
+            newV.setCapacity((int) Math.ceil(prevV.getCapacity() * (0.75 + 0.5 * random.nextDouble())));
             newVehicles.add(newV);
         }
 
@@ -116,5 +113,11 @@ public class IncrementalAgent {
             if (v.getCapacity() > max)
                 max = v.getCapacity();
         return max;
+    }
+
+    public List<MyVehicle> cloneList(List<MyVehicle> list) throws CloneNotSupportedException {
+        List<MyVehicle> clone = new ArrayList<MyVehicle>(list.size());
+        for(MyVehicle item: list) clone.add(item.clone());
+        return clone;
     }
 }

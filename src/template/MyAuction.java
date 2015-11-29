@@ -69,7 +69,9 @@ public class MyAuction  implements AuctionBehavior {
         int opponentSize = 3;
         for (int i = 0; i < opponentSize; i++) {
             opponents.add(new IncrementalAgent(agent.vehicles()));
+
             opponents.get(i).randomizeVehicles();
+
         }
         opponentBidRatio = new ArrayList<>();
         myTotalBid = 0;

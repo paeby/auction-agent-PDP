@@ -46,4 +46,9 @@ public class MyVehicle {
     public int id() {
         return vehicle.id();
     }
+
+    @Override
+    protected MyVehicle clone() throws CloneNotSupportedException {
+        return new MyVehicle(this);
+    }
 }
