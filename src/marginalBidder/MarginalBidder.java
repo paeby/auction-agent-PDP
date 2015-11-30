@@ -98,7 +98,7 @@ public class MarginalBidder implements AuctionBehavior {
         //Compute marginal costs for me and for opponent
         double marginalCost = Math.abs(potentialAgent.getCost() - myAgent.getCost());
         //In order to bid lower than opponents estimated bid
-        double bid = marginalCost * 1.05;
+        double bid = marginalCost * 0.95;
         return (long) Math.ceil(bid);
     }
 
