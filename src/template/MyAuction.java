@@ -135,13 +135,14 @@ public class MyAuction  implements AuctionBehavior {
         if(ratio > 2.5) ratio = 2.5; //TODO test these values!!
         else if(ratio < 0.7) ratio = 0.7;
 
-        moderate += (weWon ? 0.1 : -0.05); //TODO test these values!!
+        moderate += (weWon ? 0.2 : -0.05); //TODO test these values!!
         if(moderate > 1) moderate = 1;
         else if(moderate < 0.5) moderate = 0.5;
     }
 
     @Override
     public Long askPrice(Task task) {
+        System.out.println("ROUND: "+ round);
         //If agent cannot carry task, bid highest so won't take task
         if (myAgent.maxCapacity() < task.weight) return Long.MAX_VALUE;
 
@@ -172,7 +173,7 @@ public class MyAuction  implements AuctionBehavior {
 
         int myTime = (int) Math.ceil((potentialAgent.getTaskSize() / totalTasks) * MAX_TIME);
         int opponentTime = (int)((MAX_TIME - myTime) / 3);
-        
+
 
         //Change costs of new IncrementalAgents
         System.out.println("My time: "+myTime);
