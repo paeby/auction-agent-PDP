@@ -114,17 +114,14 @@ public class MyAuction  implements AuctionBehavior {
             }
             opponentTotalBid += opponentBid;
         }
-        System.out.println("opponentTotalBid = " + opponentTotalBid);
 
         double opponentMeanCost = 0;
         for (IncrementalAgent a: potentialOpponents) {
             opponentMeanCost += a.getCost();
         }
         opponentMeanCost /= potentialOpponents.size();
-        System.out.println("opponentMeanCost = " + opponentMeanCost);
         opponentBidRatio.add(opponentTotalBid / opponentMeanCost);
-        System.out.println("opponentBidRatio = " + opponentBidRatio.get(opponentBidRatio.size()-1));
-
+        
         round++; //increment round counter
 
         int weight = 0; //TODO what is happening here? unclear...
@@ -133,7 +130,6 @@ public class MyAuction  implements AuctionBehavior {
             newRatio += i * opponentBidRatio.get(i-1);
             weight += i;
         }
-        System.out.println("newRatio = " + newRatio);
 
         ratio = (newRatio/weight + ratio) / 2;
         if(ratio > 2.5) ratio = 2.5; //TODO test these values!!
@@ -155,12 +151,12 @@ public class MyAuction  implements AuctionBehavior {
         oppPrevMeanCost /= opponents.size();
 
         //Compute marginal cost
-        //Add task to taskset, recompute plan
+        //Add task to taskSet, recompute plan
         potentialAgent = myAgent.copyOf();
         //We only add to currentTasks if bid is won in auctionResult(...)
         potentialAgent.addTask(task);
 
-        //Add task to potential opponent's tasksets
+        //Add task to potential opponent's taskSets
         potentialOpponents = new ArrayList<>();
         for(IncrementalAgent a: opponents) {
             potentialOpponents.add(a.copyOf());
@@ -170,12 +166,13 @@ public class MyAuction  implements AuctionBehavior {
         }
 
         //Partition time according to number of tasks in sets of each
-        int totalTasks = potentialAgent.getTaskSize();
+        double totalTasks = potentialAgent.getTaskSize();
         for (IncrementalAgent a: potentialOpponents) totalTasks += a.getTaskSize();
         assert totalTasks != 0; //else divide by zero
-        int myTime = (int) Math.ceil(potentialAgent.getTaskSize() / totalTasks * MAX_TIME);
-        myTime = 5000;
-        int opponentTime = (int)MAX_TIME - myTime / 3;
+
+        int myTime = (int) Math.ceil((potentialAgent.getTaskSize() / totalTasks) * MAX_TIME);
+        int opponentTime = (int)((MAX_TIME - myTime) / 3);
+        
 
         //Change costs of new IncrementalAgents
         System.out.println("My time: "+myTime);
