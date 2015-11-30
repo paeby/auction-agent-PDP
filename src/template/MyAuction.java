@@ -65,16 +65,17 @@ public class MyAuction  implements AuctionBehavior {
         this.agent = agent;
         this.vehicle = agent.vehicles().get(0);
         this.currentCity = vehicle.homeCity();
+
         //setup here for incremental collections
         myAgent = new IncrementalAgent(agent.vehicles());
+
         //3 different settings for opponents
         int opponentSize = 3;
         for (int i = 0; i < opponentSize; i++) {
             opponents.add(new IncrementalAgent(agent.vehicles()));
-
             opponents.get(i).randomizeVehicles();
-
         }
+
         opponentBidRatio = new ArrayList<>();
         myTotalBid = 0;
         opponentTotalBid = 0;
@@ -92,7 +93,10 @@ public class MyAuction  implements AuctionBehavior {
     public void auctionResult(Task previous, int winner, Long[] bids) {
         long myBid = bids[agent.id()];
         long opponentBid = bids[(agent.id() + 1) % 2];
-        
+
+        System.out.println("My bid: "+myBid);
+        System.out.println("Opponent bid: " + opponentBid);
+
         boolean weWon = agent.id() == winner;
 
         //If I am winner, add task to my set, else add to opponent's sets
@@ -170,6 +174,7 @@ public class MyAuction  implements AuctionBehavior {
 
 
         //Change costs of new IncrementalAgents
+        System.out.println("My time: "+myTime);
         planner.setTimeout(myTime);
         potentialAgent.setCost(planner.getCost(potentialAgent));
         double oppMeanCost = 0;
@@ -201,36 +206,7 @@ public class MyAuction  implements AuctionBehavior {
             ts.add(t);
         }
         IncrementalAgent finalAgent = new IncrementalAgent(vs, ts, 0);
-        planner.setTimeout(20000);
         planner.getCost(finalAgent);
         return planner.getPlan(myAgent);
-
-//		System.out.println("Agent " + agent.id() + " has tasks " + tasks);
-//
-//        List<MyVehicle> myVehicles = new ArrayList<>();
-//        for(Vehicle v: vehicles) {
-//            myVehicles.add(new MyVehicle(v));
-//        }
-//
-//        HashSet<Task> myTasks = new HashSet<>();
-//        for(Task t: tasks) {
-//            myTasks.add(t);
-//        }
-//
-//        PlanState myPlanState = new PlanState(myVehicles, myTasks.size());
-//
-//        //Plan planVehicle1 = naivePlan(vehicle, tasks);
-//
-//        List<Plan> plans = new ArrayList<Plan>();
-//
-//        for(MyVehicle v: myVehicles) {
-//            plans.add(planner.buildPlan(myPlanState, v, myTasks));
-//        }
-//
-//		/*plans.add(planVehicle1);
-//		while (plans.size() < vehicles.size())
-//			plans.add(Plan.EMPTY);*/
-//
-//        return plans;
     }
 }
