@@ -42,6 +42,7 @@ public class MyAuction  implements AuctionBehavior {
     private ArrayList<Double> opponentBidRatio; // ratio between estimated bids and actual bids of opponents
     private int round;
     private int iterations;
+    private final double minMod = 0.7;
 
     @Override
     public void setup(Topology topology, TaskDistribution distribution,
@@ -82,7 +83,7 @@ public class MyAuction  implements AuctionBehavior {
 
         planner = new Planner(MAX_TIME, iterations);
 
-        moderate = 0.5;
+        moderate = minMod;
         ratio = 1;
 
         long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
@@ -123,8 +124,9 @@ public class MyAuction  implements AuctionBehavior {
         opponentBidRatio.add(opponentTotalBid / opponentMeanCost);
         
         round++; //increment round counter
+        System.out.println("round = " + round);
 
-        int weight = 0; //TODO what is happening here? unclear...
+        int weight = 0;
         double newRatio = 0;
         for (int i = 1; i <= round; i++) {
             newRatio += i * opponentBidRatio.get(i-1);
@@ -135,9 +137,9 @@ public class MyAuction  implements AuctionBehavior {
         if(ratio > 2.5) ratio = 2.5; //TODO test these values!!
         else if(ratio < 0.7) ratio = 0.7;
 
-        moderate += (weWon ? 0.2 : -0.05); //TODO test these values!!
-        if(moderate > 1) moderate = 1;
-        else if(moderate < 0.5) moderate = 0.5;
+        moderate += (weWon ? 0.15 : -0.05);
+        if(moderate > 1.1) moderate = 1.1;
+        else if(moderate < minMod) moderate = minMod;
     }
 
     @Override
@@ -174,7 +176,6 @@ public class MyAuction  implements AuctionBehavior {
 
 
         //Change costs of new IncrementalAgents
-        System.out.println("My time: "+myTime);
         planner.setTimeout(myTime);
         potentialAgent.setCost(planner.getCost(potentialAgent));
         double oppMeanCost = 0;
@@ -207,6 +208,6 @@ public class MyAuction  implements AuctionBehavior {
         }
         IncrementalAgent finalAgent = new IncrementalAgent(vs, ts, 0);
         planner.getCost(finalAgent);
-        return planner.getPlan(myAgent);
+        return planner.getPlan(finalAgent);
     }
 }
