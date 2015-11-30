@@ -70,10 +70,6 @@ public class MarginalBidder implements AuctionBehavior {
 
     @Override
     public void auctionResult(Task previous, int winner, Long[] bids) {
-        long myBid = bids[agent.id()];
-
-        System.out.println("My bid: "+myBid);
-
         boolean weWon = agent.id() == winner;
 
         //If I am winner, add task to my set, else add to opponent's sets
