@@ -188,12 +188,12 @@ public class MyAuction  implements AuctionBehavior {
         oppMeanCost /= potentialOpponents.size();
 
         //Compute marginal costs for me and for opponent
-        double marginalCost = potentialAgent.getCost() - myAgent.getCost();
+        double marginalCost = Math.abs(potentialAgent.getCost() - myAgent.getCost());
         double oppMargCost = (oppMeanCost - oppPrevMeanCost) * ratio;
         //In order to bid lower than opponents estimated bid
         double bid = 0.85 * oppMargCost;
         if(bid < marginalCost * moderate) bid = marginalCost * moderate;
-        if(bid < 0) bid = 1;
+        if(bid <= 0) bid = 1;
         return (long) Math.ceil(bid);
     }
 
