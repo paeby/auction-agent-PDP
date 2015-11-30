@@ -70,14 +70,13 @@ public class Planner {
             if(planCost < min) {
                 bestPlan = new PlanState(plan);
                 min = planCost;
-                System.out.println(min);
+
             }
             if(System.currentTimeMillis()-time_start > this.timeout_plan) {
                 System.out.println("time out centralized plan");
                 break;
             }
         }
-        System.out.println(bestPlan.cost());
         return bestPlan.cost();
     }
 
@@ -155,8 +154,6 @@ public class Planner {
             }
 
             plan.addVTasks(vChosen.id(), tasksID.get(t));
-            System.out.println("P length "+ plan.getTimeP().length);
-            System.out.println("t id "+ tasksID.size());
             plan.getTimeP()[tasksID.get(t)] = times[vChosen.id()];
             plan.getTimeD()[tasksID.get(t)] = times[vChosen.id()] + 1;
             times[vChosen.id()] = times[vChosen.id()] + 2;

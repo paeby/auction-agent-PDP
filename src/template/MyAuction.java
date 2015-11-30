@@ -39,7 +39,7 @@ public class MyAuction  implements AuctionBehavior {
     private double opponentTotalBid; //total of bids of opponent that were accepted
     private double ratio;
     private double moderate;
-    private ArrayList<Double> opponentBidRatio;
+    private ArrayList<Double> opponentBidRatio; // ratio between estimated bids and actual bids of opponents
     private int round;
     private int iterations;
 
@@ -92,7 +92,7 @@ public class MyAuction  implements AuctionBehavior {
     public void auctionResult(Task previous, int winner, Long[] bids) {
         long myBid = bids[agent.id()];
         long opponentBid = bids[(agent.id() + 1) % 2];
-
+        
         boolean weWon = agent.id() == winner;
 
         //If I am winner, add task to my set, else add to opponent's sets
@@ -110,13 +110,16 @@ public class MyAuction  implements AuctionBehavior {
             }
             opponentTotalBid += opponentBid;
         }
+        System.out.println("opponentTotalBid = " + opponentTotalBid);
 
         double opponentMeanCost = 0;
-        for (IncrementalAgent a: opponents) {
+        for (IncrementalAgent a: potentialOpponents) {
             opponentMeanCost += a.getCost();
         }
-        opponentMeanCost /= opponents.size();
+        opponentMeanCost /= potentialOpponents.size();
+        System.out.println("opponentMeanCost = " + opponentMeanCost);
         opponentBidRatio.add(opponentTotalBid / opponentMeanCost);
+        System.out.println("opponentBidRatio = " + opponentBidRatio.get(opponentBidRatio.size()-1));
 
         round++; //increment round counter
 
@@ -126,6 +129,7 @@ public class MyAuction  implements AuctionBehavior {
             newRatio += i * opponentBidRatio.get(i-1);
             weight += i;
         }
+        System.out.println("newRatio = " + newRatio);
 
         ratio = (newRatio/weight + ratio) / 2;
         if(ratio > 2.5) ratio = 2.5; //TODO test these values!!
@@ -182,7 +186,6 @@ public class MyAuction  implements AuctionBehavior {
         //Compute marginal costs for me and for opponent
         double marginalCost = potentialAgent.getCost() - myAgent.getCost();
         double oppMargCost = (oppMeanCost - oppPrevMeanCost) * ratio;
-
         //In order to bid lower than opponents estimated bid
         double bid = 0.85 * oppMargCost;
         if(bid < marginalCost * moderate) bid = marginalCost * moderate;
