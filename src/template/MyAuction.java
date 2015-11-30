@@ -174,6 +174,7 @@ public class MyAuction  implements AuctionBehavior {
         for (IncrementalAgent a: potentialOpponents) totalTasks += a.getTaskSize();
         assert totalTasks != 0; //else divide by zero
         int myTime = (int) Math.ceil(potentialAgent.getTaskSize() / totalTasks * MAX_TIME);
+        myTime = 5000;
         int opponentTime = (int)MAX_TIME - myTime / 3;
 
         //Change costs of new IncrementalAgents
