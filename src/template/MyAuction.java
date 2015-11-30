@@ -135,7 +135,7 @@ public class MyAuction  implements AuctionBehavior {
         if(ratio > 2.5) ratio = 2.5; //TODO test these values!!
         else if(ratio < 0.7) ratio = 0.7;
 
-        moderate += (weWon ? 0.1 : -0.05); //TODO test these values!!
+        moderate += (weWon ? 0.2 : -0.05); //TODO test these values!!
         if(moderate > 1) moderate = 1;
         else if(moderate < 0.5) moderate = 0.5;
     }
@@ -186,12 +186,12 @@ public class MyAuction  implements AuctionBehavior {
         oppMeanCost /= potentialOpponents.size();
 
         //Compute marginal costs for me and for opponent
-        double marginalCost = potentialAgent.getCost() - myAgent.getCost();
+        double marginalCost = Math.abs(potentialAgent.getCost() - myAgent.getCost());
         double oppMargCost = (oppMeanCost - oppPrevMeanCost) * ratio;
         //In order to bid lower than opponents estimated bid
         double bid = 0.85 * oppMargCost;
         if(bid < marginalCost * moderate) bid = marginalCost * moderate;
-        if(bid < 0) bid = 1;
+        if(bid <= 0) bid = 1;
         return (long) Math.ceil(bid);
     }
 
