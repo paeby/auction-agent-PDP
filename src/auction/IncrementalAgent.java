@@ -83,13 +83,25 @@ public class IncrementalAgent {
         //random int between 2 and 5 (0 + 2 to 3 + 2)
         int numVehicles = random.nextInt(4) + 2;
 
+        int totalCapacity = 0;
+
+        for(MyVehicle v: vehicles) {
+            totalCapacity += v.getVehicle().capacity();
+        }
+
         //change size of vehicles to be that of numVehicles
         //randomize capacity
         for(int i = 0; i < numVehicles; i++) {
             MyVehicle prevV = vehicles.get(i % vehicles.size());
             MyVehicle newV = new MyVehicle(prevV);
             //Set vehicle capacity between factor 0.75 and 1.25 of initial capacity
-            newV.setCapacity((int) Math.ceil(prevV.getCapacity() * (0.75 + 0.5 * random.nextDouble())));
+            int newCapacity;
+            if(i < numVehicles-1) {
+                newCapacity = (int) Math.ceil(prevV.getCapacity() * (0.75 + 0.5 * random.nextDouble()));
+                totalCapacity -= newCapacity;
+                newV.setCapacity(newCapacity);
+            }
+            else newV.setCapacity(totalCapacity);
             newV.setId(i);
             newVehicles.add(newV);
         }
