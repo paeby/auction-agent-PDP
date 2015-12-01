@@ -1,0 +1,101 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{multicol}
+\setlength{\columnsep}{0.5cm}
+\geometry{
+a4paper,
+total={170mm,257mm},
+left=25mm,
+right=25mm,
+top=28mm,
+bottom=40mm
+}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\author{Prisca Aeby, Alexis Semple}
+\title{An auction agent for the PDP}
+\date{}
+
+% Paragraph format
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.5em}
+
+\renewcommand{\arraystretch}{1.3}
+
+\begin{document}
+\maketitle
+
+Our task for this lab was to design an agent capable of making online bids for tasks within a world, knowing at the time of the bid only the details of the task, and after each bid is made, the bids made (including the opponent) and the winner of the bid. The model of bidding we follow here is a \emph{closed-bid-first-price reverse auction}.
+
+The problem, then, was to design the agent such that it would be able to determine a bid for which it would make a net profit, that is larger than its marginal cost for that task. Furthermore, it would need to estimate in some way the behaviour of the opponent. This is necessary for our agent to obtain tasks when facing an agent which would systematically bid lower than us and still obtain a good profit. If our implementation can decide to bid below our marginal cost (meaning a net deficit for one turn) while a profit could be made as more tasks are won, it would be able to circumvent such situations.
+
+\subsection*{Bidding}
+Our main strategy for \texttt{askPrice} the method that proposes a bid for a given task, relies on our agents estimation of the opponent's bid, learning from past bids that were made, and our own marginal cost calculated for this task.
+
+\subsubsection*{Bid decision for our agent}
+The computation for our agent's bid was made by creating a plan for a potential agent, i.e. one which we assume has the proposed task in its \texttt{TaskSet} along with all previous tasks won in the auction so far. The plan is created using the SLS planning algorithm we created for the previous lab, which we tweaked a bit to make it perform faster and yield better results. Since this is not the object of this lab, we will not dwell on its implementation here. 
+
+Given a \texttt{TaskSet} $\mathcal{T}$ and a proposed task $t  \notin \mathcal{T}$, we already know the cost computed for the plan using $\mathcal{T}$ and keep track of it using a class called \texttt{IncrementalAgent}. We can then compute the cost of $\mathcal{T} \cup \lbrace t\rbrace$ (our so-called potential agent) and use both of these to compute their difference, i.e. the \emph{marginal cost}.
+
+\subsubsection*{Bid decision for the opponent}
+Since we do not know the exact configuration of the agent we are facing in an auction, our strategy relies on $n$ different agent configurations (with $n=3$ for our tests). The idea behind this is that if we compute the marginal cost for several agents, all with randomized parameters within certain constraints, we would get a more general estimation of the opponent's bid than if we'd used only one random configuration. 
+
+By the problem definition, we knew that the vehicle configurations for the agents we would be using weren't fixed, so we decided, starting from our own vehicle set, to randomize their details. The number of vehicles is chosen between 2 and 5. The capacity of each vehicle is defined randomly between 75\% and 125\% of each `original' vehicle, while keeping the sum of the capacities the same. The home city of each vehicle is also picked at random. For more details, see the \texttt{randomizeVehicles} function in the \texttt{IncrementalAgent} class.
+
+By computing the plans for these different agent configurations, and their mean cost, we can obtain an estimated marginal cost for the opponent in the same way as for our agent (i.e. using the previous costs and the potential costs), multiplied by a factor \texttt{ratio} which is explained below.
+
+We split the time available for the computation of the bid according to the current task set size of the opponent and our own task set size.
+
+We set our bid to be $0.85*opponentMarginalCost$, so that we bid just below our estimated bid for the opponent. However, if this bid is lower than our computed marginal cost multiplied by a factor \texttt{moderate} (explained below), it is set to that value instead, so that our bid doesn't result in a net loss for us (at least not in the long run).
+
+\subsubsection*{Moderation and learning}
+An exception to the general behaviour of our agent described above is allowed by the use of the \texttt{moderate} factor, which is designed to let the agent bid below his computed marginal cost. This is applied mostly in the beginning of the auction, in order to have a greater chance of getting the early tasks. We thus set \texttt{moderate} such that $0.5 \leq $ \texttt{moderate} $< 1$ (good performance in tests for $0.6 \leq$ \texttt{moderate} $\leq 0.8$), starting at a lower value to begin with, and increasing it by a fixed increment (say 0.15) every time a task is won, and decreasing it by a smaller value (say 0.05) every time the opponent wins one. The moderation later on in the auction can still happen, but the factor is often weaker. The factor is updated in \texttt{auctionResult}.
+
+The marginal cost of the opponent in the \texttt{askPrice} phase is multiplied by a factor \texttt{ratio}, which is defined as the ratio between the actual bids of the opponent and our estimated bids. We use this value of past bid ratios as a correction for the current ratio, where more recent ratios have a greater weight. The value is bounded such that $0.75 \leq $ \texttt{ratio} $\leq 2.5$ in order to not let its effect be unconstrained. This value is updated in the \texttt{auctionResult} method.
+
+\subsection*{Testing the agent}
+In order to assess the efficiency of our auction agent, we tested it against some agents with simple behaviours. These agents were : the \texttt{AuctionTemplate} given for the lab (called \textbf{AT} hereafter), which computes a bid based on the distance of delivery of the task; a random bidder (called \textbf{RB}) which bids a random value between 5 and 5005 for each task; a marginal bidder which bids 5\% above its computed marginal value (called \textbf{MB+}; another that bids 5\% below its marginal value (called \textbf{MB-}). MB+ and MB- both use our SLS algorithm to compute their marginal cost, so one must expect more unpredictable values in a real situation. We call our agent \textbf{MA} (for MyAgent) and show the results of the tests in the following table.
+
+\begin{multicols}{2}
+\begin{tabular}{| c | c | l | l |}
+\hline
+Opponent & Winner & Profit & Tasks \\
+\hline
+\textbf{AT} & \textbf{MA} & 6938, 787 & 17, 3 \\ \cline{2-4}
+ & \textbf{MA} & 8957, 1512 & 17, 3 \\ \cline{2-4}
+ & \textbf{MA} & 3733, 473 & 9, 1 \\ \cline{2-4}
+ & \textbf{MA} & 5584, 473 & 9, 1 \\ \hline \hline
+ 
+\textbf{RB} & \textbf{MA} & 11330, 1225 & 17, 3 \\ \cline{2-4}
+ & \textbf{MA} & 11242, 943 & 18, 2 \\ \cline{2-4}
+ & \textbf{MA} & 3047, 473 & 9, 1 \\ \cline{2-4}
+ & \textbf{MA} & 4730, 473 & 9, 1 \\ \hline
+
+\end{tabular}
+
+\begin{tabular}{| c | c | l | l |}
+\hline
+Opponent & Winner & Profit & Tasks \\
+\hline 
+ \textbf{MB+} & \textbf{MA} & 7589, 291 & 15, 5 \\ \cline{2-4}
+ & \textbf{MA} & 6158, -1590 & 14, 6 \\ \cline{2-4}
+ & \textbf{MA} & 4038, 77 & 8, 2 \\ \cline{2-4}
+ & \textbf{MA} & 4475, 91 & 9, 1 \\ \hline \hline
+ 
+  \textbf{MB-} & \textbf{MA} & 8902, -150 & 16, 4 \\ \cline{2-4}
+ & \textbf{MA} & 16004, -188 & 19, 1 \\ \cline{2-4}
+ & \textbf{MA} & 5161, -143 & 7, 3 \\ \cline{2-4}
+ & \textbf{MA} & 2512, -143 & 7, 3 \\ \hline
+
+\end{tabular}
+\end{multicols}
+The results of the profit and tasks are noted first for \textbf{MA} and then for the opponent. Our agent won the match in every case, so he performs well against basic behaviours. We ran 4 different matches for each dummy agent, with either 10 or 20 tasks, and changing the value of \texttt{moderate} between 0.7 and 0.8 (the difference is inconclusive). 
+
+\subsection*{Conclusion}
+This auction agent needs to essential strong components. First it needs the strong backbone of the planning algorithm (the SLS in our case). The better this algorithm, the lower he'll be able to bid for a task, thus giving him a greater possibility to win tasks. Second, he needs to be able to adapt to the behaviour of the opponent, such that, even if the opponent has a better planning algorithm, he can still win tasks and make a profit. Working with the past of the opponents bids is an efficient way of doing this, alongside with estimating the bids he's making, although the latter can be very time-consuming. 
+
+Other strategies could have included working with the task distribution provided, but we decided to not implement this in our case, assuming the net result would not be much better than working with just the estimations and history of bids.
+\end{document}
