@@ -82,7 +82,7 @@ public class MyAuction  implements AuctionBehavior {
 
         planner = new Planner(MAX_TIME, iterations);
 
-        moderate = 0.5;
+        moderate = 0.9;
         ratio = 1;
 
         long seed = -9019554669489983951L * currentCity.hashCode() * agent.id();
@@ -135,9 +135,9 @@ public class MyAuction  implements AuctionBehavior {
         if(ratio > 2.5) ratio = 2.5; //TODO test these values!!
         else if(ratio < 0.7) ratio = 0.7;
 
-        moderate += (weWon ? 0.2 : -0.05); //TODO test these values!!
-        if(moderate > 1) moderate = 1;
-        else if(moderate < 0.5) moderate = 0.5;
+        moderate += (weWon ? 0.15 : -0.05); //TODO test these values!!
+        if(moderate > 1.15) moderate = 1.15;
+        else if(moderate < 0.6) moderate = 0.6;
     }
 
     @Override
@@ -208,6 +208,7 @@ public class MyAuction  implements AuctionBehavior {
             ts.add(t);
         }
         IncrementalAgent finalAgent = new IncrementalAgent(vs, ts, 0);
+        planner.setTimeout(timeout_plan);
         planner.getCost(finalAgent);
         return planner.getPlan(myAgent);
     }
