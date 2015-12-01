@@ -1,8 +1,7 @@
-package template;
+package auction;
 import java.util.*;
 
 import logist.plan.Plan;
-import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.topology.Topology.City;
 

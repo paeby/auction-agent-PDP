@@ -1,4 +1,4 @@
-package template;
+package auction;
 
 import logist.simulation.Vehicle;
 import logist.topology.Topology.City;

@@ -1,4 +1,4 @@
-package RandomBidder;
+package randomBidder;
 
 import logist.LogistSettings;
 import logist.agent.Agent;
@@ -10,8 +10,8 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import template.IncrementalAgent;
-import template.Planner;
+import auction.IncrementalAgent;
+import auction.Planner;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -68,9 +68,9 @@ public class RandomBidder implements AuctionBehavior {
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 
-        List<template.MyVehicle> vs = new ArrayList<>();
+        List<auction.MyVehicle> vs = new ArrayList<>();
         for (Vehicle v: vehicles) {
-            vs.add(new template.MyVehicle(v));
+            vs.add(new auction.MyVehicle(v));
         }
         HashSet<Task> ts = new HashSet<>();
         for(Task t: tasks) {

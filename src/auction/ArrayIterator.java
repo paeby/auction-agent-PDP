@@ -1,4 +1,4 @@
-package template;
+package auction;
 
 import java.util.Iterator;
 import java.util.HashSet;

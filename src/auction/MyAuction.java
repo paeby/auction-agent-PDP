@@ -1,4 +1,4 @@
-package template;
+package auction;
 
 import logist.LogistSettings;
 import logist.agent.Agent;
@@ -42,7 +42,7 @@ public class MyAuction  implements AuctionBehavior {
     private ArrayList<Double> opponentBidRatio; // ratio between estimated bids and actual bids of opponents
     private int round;
     private int iterations;
-    private final double minMod = 0.8;
+    private final double minMod = 0.7;
 
     @Override
     public void setup(Topology topology, TaskDistribution distribution,

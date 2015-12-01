@@ -1,10 +1,8 @@
-package template;
+package auction;
 
 /**
  * Created by Alexis Semple on 28/11/15.
  */
-
-import logist.task.Task;
 
 import java.util.HashMap;
 import java.util.HashSet;

@@ -10,14 +10,13 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
-import template.IncrementalAgent;
-import template.MyVehicle;
-import template.Planner;
+import auction.IncrementalAgent;
+import auction.MyVehicle;
+import auction.Planner;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by Alexis Semple on 29/11/15.
@@ -26,9 +25,9 @@ public class MarginalBidder implements AuctionBehavior {
     private Agent agent;
     private Vehicle vehicle;
     //Growing Set of tasks with each new task auctioned
-    private template.IncrementalAgent myAgent; //object used to incrementally add tasks to set and compute its cost as auction proceeds
-    private template.IncrementalAgent potentialAgent; //used in bidding phase to compute 'potential' new stage in iteration (if bid is won)
-    private ArrayList<template.IncrementalAgent> opponents = new ArrayList<>(); //n opponents incrementally augmented
+    private auction.IncrementalAgent myAgent; //object used to incrementally add tasks to set and compute its cost as auction proceeds
+    private auction.IncrementalAgent potentialAgent; //used in bidding phase to compute 'potential' new stage in iteration (if bid is won)
+    private ArrayList<auction.IncrementalAgent> opponents = new ArrayList<>(); //n opponents incrementally augmented
     //Time allowed to compute bid
     private static long MAX_TIME;
     private static long timeout_plan;
@@ -56,12 +55,12 @@ public class MarginalBidder implements AuctionBehavior {
         this.vehicle = agent.vehicles().get(0);
 
         //setup here for incremental collections
-        myAgent = new template.IncrementalAgent(agent.vehicles());
+        myAgent = new auction.IncrementalAgent(agent.vehicles());
 
         //3 different settings for opponents
         int opponentSize = 3;
         for (int i = 0; i < opponentSize; i++) {
-            opponents.add(new template.IncrementalAgent(agent.vehicles()));
+            opponents.add(new auction.IncrementalAgent(agent.vehicles()));
             opponents.get(i).randomizeVehicles();
         }
 
@@ -75,7 +74,7 @@ public class MarginalBidder implements AuctionBehavior {
         //If I am winner, add task to my set, else add to opponent's sets
         if(weWon) {
             //myAgent = the object computed for potentialAgent during bidding
-            myAgent = new template.IncrementalAgent(potentialAgent.getVehicles(), potentialAgent.getTasks(), potentialAgent.getCost());
+            myAgent = new auction.IncrementalAgent(potentialAgent.getVehicles(), potentialAgent.getTasks(), potentialAgent.getCost());
         }
     }
 

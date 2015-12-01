@@ -11,12 +11,12 @@
 
 	<agent name="my-auction">
 		<set class-path="/bin"/>
-		<set class-name="template.MyAuction"/>
+		<set class-name="auction.MyAuction"/>
 	</agent>
 
 	<agent name="random-bidder">
 		<set class-path="/bin"/>
-		<set class-name="RandomBidder.RandomBidder"/>
+		<set class-name="randomBidder.RandomBidder"/>
 	</agent>
 
 	<agent name="marginal-bidder">
