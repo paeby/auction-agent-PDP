@@ -35,7 +35,7 @@ public class MyAuction  implements AuctionBehavior {
     private static long MAX_TIME;
     private long timeout_plan;
     private static Planner planner;
-    private double myTotalBid; //total of bids that were accepted - reward for tasks
+    //private double myTotalBid; //total of bids that were accepted - reward for tasks
     private double opponentTotalBid; //total of bids of opponent that were accepted
     private double ratio;
     private double moderate;
@@ -78,7 +78,6 @@ public class MyAuction  implements AuctionBehavior {
         }
 
         opponentBidRatio = new ArrayList<>();
-        myTotalBid = 0;
         opponentTotalBid = 0;
 
         planner = new Planner(MAX_TIME, iterations);
@@ -104,7 +103,6 @@ public class MyAuction  implements AuctionBehavior {
         if(weWon) {
             //myAgent = the object computed for potentialAgent during bidding
             myAgent = new IncrementalAgent(potentialAgent.getVehicles(), potentialAgent.getTasks(), potentialAgent.getCost());
-            myTotalBid += myBid;
         }
         else {
             //opponents = the objects computed for potentialOpponents during bidding
@@ -134,8 +132,9 @@ public class MyAuction  implements AuctionBehavior {
         }
 
         ratio = (newRatio/weight + ratio) / 2;
-        if(ratio > 2.5) ratio = 2.5; //TODO test these values!!
-        else if(ratio < 0.7) ratio = 0.7;
+        System.out.println("ratio = " + ratio);
+        if(ratio > 2.5) ratio = 2.5;
+        else if(ratio < 0.75) ratio = 0.75;
 
         moderate += (weWon ? 0.15 : -0.05);
         if(moderate > 1.1) moderate = 1.1;
@@ -190,6 +189,7 @@ public class MyAuction  implements AuctionBehavior {
         //Compute marginal costs for me and for opponent
         double marginalCost = Math.abs(potentialAgent.getCost() - myAgent.getCost());
         double oppMargCost = (oppMeanCost - oppPrevMeanCost) * ratio;
+        System.out.println("oppMargCost = " + oppMargCost);
         //In order to bid lower than opponents estimated bid
         double bid = 0.85 * oppMargCost;
         if(bid < marginalCost * moderate) bid = marginalCost * moderate;
